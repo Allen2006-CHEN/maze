@@ -58,7 +58,7 @@ def plot_maze(maze: List[List[int]],
     ax.axis('off')
     return fig, ax
                   
-def plot_path(maze, path, fig, ax):
+def plot_path(maze, path, fig, ax, speed_ms: int = 100):
     height = len(maze)
 
     # 初始化函數

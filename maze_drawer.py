@@ -7,7 +7,8 @@ def create_line(x1: float, x2: float, y1: float, y2: float, color: str = 'black'
 
 def plot_maze(maze: List[List[int]], 
               start: Optional[Tuple[int, int]] = None, 
-              end: Optional[Tuple[int, int]] = None) -> Tuple[plt.Figure, plt.Axes]:
+              end: Optional[Tuple[int, int]] = None,
+              path: Optional[List[Tuple[int, int]]] = None) -> Tuple[plt.Figure, plt.Axes]: # 新增 path 參數
     
     if not maze or not maze[0]:
         raise ValueError("迷宮資料不可為空")
@@ -32,6 +33,14 @@ def plot_maze(maze: List[List[int]],
             if maze[i][j] & 2:  
                 ax.add_line(create_line(j, j + 1, y_bottom, y_bottom))
 
+    # ===== 新增：繪製解答路徑 =====
+    if path:
+        # 將陣列的 (row, col) 轉換為畫布的中心點 (x, y) 座標
+        path_x = [col + 0.5 for row, col in path]
+        path_y = [height - row - 0.5 for row, col in path]
+        # 畫出一條藍色的線，alpha=0.4 設定為半透明以免遮擋起點終點字樣
+        ax.plot(path_x, path_y, color='green', linewidth=4, alpha=0.4)
+
     if start:
         row, col = start
         ax.plot(col + 0.5, height - row - 0.5, marker='o', markersize=16, color='green')
@@ -48,3 +57,4 @@ def plot_maze(maze: List[List[int]],
     ax.axis('off')         
     
     return fig, ax
+

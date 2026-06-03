@@ -34,7 +34,7 @@ def main():
     # 5. 關鍵步驟：把動畫轉成 HTML JavaScript 格式，並用 components 顯示
     with st.spinner("正在生成動畫，請稍候..."):
         # to_jshtml() 會產生一個帶有播放/暫停按鈕的互動式播放器
-        components.html(ani.to_jshtml(), height=600)
+        components.html(ani.to_jshtml(), height=850)
 
 if __name__ == "__main__":
     main()

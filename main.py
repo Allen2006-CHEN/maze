@@ -12,6 +12,11 @@ def main():
     st.sidebar.header("迷宮設定")
     width = st.sidebar.slider("迷宮寬度", 5, 30, 20)
     height = st.sidebar.slider("迷宮高度", 5, 30, 15)
+
+    # 新增：動畫速度拉桿
+    st.sidebar.header("動畫設定")
+    # 設定範圍從 10 毫秒(極快) 到 500 毫秒(極慢)，預設在 100 毫秒
+    anim_speed = st.sidebar.slider("每步延遲 (毫秒/越小越快)", 10, 500, 100, step=10)
     
     if st.button("重新生成迷宮"):
         pass

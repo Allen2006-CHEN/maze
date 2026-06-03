@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.lines as lines
+import matplotlib.animation as animation  
 from typing import List, Tuple, Optional
 
 def create_line(x1: float, x2: float, y1: float, y2: float, color: str = 'black', linewidth: int = 2) -> lines.Line2D:
@@ -54,7 +55,34 @@ def plot_maze(maze: List[List[int]],
     ax.set_xlim(0, width)
     ax.set_ylim(0, height)
     ax.set_aspect('equal') 
-    ax.axis('off')         
+    ax.axis('off')  
+                  
+def plot_path(maze, path, fig, ax):
+    height = len(maze)
+
+    # 初始化函數
+    adjusted_path = [(x+0.5, height-y-0.5) for y, x in path]
+    x_data, y_data = zip(*adjusted_path)
+
+    def init():
+        line.set_data([], [])
+        return line,
+
+    # 更新函數
+    def update(num):
+        line.set_data(x_data[:num+1], y_data[:num+1])
+        return line,
+
+    # lw (線寬) 稍微調粗一點，顏色換成藍色以免跟終點的紅色搞混
+    line, = ax.plot([], [], color='blue', lw=4, alpha=0.6)
     
-    return fig, ax
+    # 建立動畫
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(path), init_func=init,
+        interval=100, blit=True, repeat=False
+    )
+    
+    return fig, ax, ani
+
+                  
 

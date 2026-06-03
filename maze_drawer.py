@@ -55,7 +55,8 @@ def plot_maze(maze: List[List[int]],
     ax.set_xlim(0, width)
     ax.set_ylim(0, height)
     ax.set_aspect('equal') 
-    ax.axis('off')  
+    ax.axis('off')
+    return fig, ax
                   
 def plot_path(maze, path, fig, ax):
     height = len(maze)

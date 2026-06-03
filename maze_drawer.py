@@ -17,7 +17,7 @@ def plot_maze(maze: List[List[int]],
     height = len(maze)
     width = len(maze[0])
     
-    fig, ax = plt.subplots(figsize=(width/1.5, height/1.5))
+    fig, ax = plt.subplots(figsize=(width/2.5, height/2.5))
 
     ax.add_line(create_line(0, 0, 0, height, linewidth=3))
     ax.add_line(create_line(0, width, height, height, linewidth=3))

@@ -7,7 +7,7 @@ from maze_drawer import plot_maze, plot_path  # 新增引入 plot_path
 from maze_solver import a_star
 
 def main():
-    st.title("我的 2D 隨機迷宮 (A* 動畫版)") 
+    st.title("A* Search Algorithm 走迷宮 ") 
     
     st.sidebar.header("迷宮設定")
     width = st.sidebar.slider("迷宮寬度", 5, 30, 20)

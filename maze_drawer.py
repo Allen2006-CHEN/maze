@@ -61,29 +61,52 @@ def plot_maze(maze: List[List[int]],
 def plot_path(maze, path, fig, ax, speed_ms: int = 100):
     height = len(maze)
 
-    # 初始化函數
     adjusted_path = [(x+0.5, height-y-0.5) for y, x in path]
     x_data, y_data = zip(*adjusted_path)
 
     def init():
         line.set_data([], [])
-        return line,
+        head.set_data([], [])
+        return line, head
 
-    # 更新函數
     def update(num):
+        # 1. 更新走過的軌跡線
         line.set_data(x_data[:num+1], y_data[:num+1])
-        return line,
+        
+        # 2. 更新最前端的探路者 (只顯示在最新的一格)
+        head.set_data([x_data[num]], [y_data[num]])
 
-    # lw (線寬) 稍微調粗一點，顏色換成藍色以免跟終點的紅色搞混
+        # 3. 根據移動方向，改變三角形的朝向
+        if num > 0:
+            dx = x_data[num] - x_data[num-1]
+            dy = y_data[num] - y_data[num-1]
+            if dx > 0:
+                head.set_marker('>') # 往右
+            elif dx < 0:
+                head.set_marker('<') # 往左
+            elif dy > 0:
+                head.set_marker('^') # 往上
+            elif dy < 0:
+                head.set_marker('v') # 往下
+        else:
+            # 剛出發的第一步，先給一個圓點
+            head.set_marker('o') 
+
+        return line, head
+
+    # 繪製走過的軌跡 (藍色半透明線)
     line, = ax.plot([], [], color='blue', lw=4, alpha=0.6)
     
-    # 建立動畫
+    # 繪製最前端的三角形 (橘色大標記，設定 linestyle='None' 避免畫出多餘的線)
+    head, = ax.plot([], [], color='darkorange', markersize=14, linestyle='None')
+    
     ani = animation.FuncAnimation(
         fig, update, frames=len(path), init_func=init,
-        interval=100, blit=True, repeat=False
+        interval=speed_ms, blit=True, repeat=False
     )
     
     return fig, ax, ani
+
 
                   
 

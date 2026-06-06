@@ -41,7 +41,6 @@ def a_star(graph, start_y, start_x, target_y, target_x):
             if past_cost < min_cost[nxt_y][nxt_x]:
                 min_cost[nxt_y][nxt_x] = past_cost
                 prev[nxt_y][nxt_x] = (y, x)
-                # 這裡幫你修正了 target_y 與 target_x 的傳入順序
                 tot_cost = future_cost(nxt_y, nxt_x, target_y, target_x) + past_cost
                 heapq.heappush(heap, (tot_cost, past_cost, nxt_y, nxt_x))
 

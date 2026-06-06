@@ -11,18 +11,25 @@ def barrier(graph, y, x, i, j):
     if i == -1:
         return graph[y-1][x] & 2
     return graph[y][x-1] & 1
-
-def a_star(graph, start_y, start_x, target_y, target_x):
-    n = len(graph)
-    m = len(graph[0])
-    ways = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
-    min_cost = [[float('inf')]*m for _ in range(n)]
-    min_cost[start_y][start_x] = 0
-
-    prev = [[None]*m for _ in range(n)]
-    heap = [(0, 0, start_y, start_x)]
-
+def a_star(graph, start_y, start_x, target_y, target_x, traps=None):
+    if traps is None:
+        traps = set()
+        
+    # ... 原有的初始化程式碼 ...
+    
+    while heap:
+        # ... 取出節點 ...
+        for i, j in ways:
+            nxt_y = y + i
+            nxt_x = x + j
+            
+            # 防守邊界與邊界牆
+            if nxt_y < 0 or nxt_x < 0 or nxt_y == n or nxt_x == m: continue
+            if barrier(graph, y, x, i, j): continue
+                
+            # 關鍵新增：如果是陷阱，絕對不走！
+            if (nxt_y, nxt_x) in traps:
+                continue
     while heap:
         _, past_cost, y, x = heapq.heappop(heap)
 

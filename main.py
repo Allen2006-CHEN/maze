@@ -8,7 +8,7 @@ from maze_drawer import plot_maze, plot_path
 from maze_solver import a_star
 
 def main():
-    st.title("我的 2D 隨機迷宮 (黃金路徑保護版)") 
+    st.title("我的 2D 隨機迷宮 ") 
     
     # ==========================================
     # 1. 側邊欄設定區

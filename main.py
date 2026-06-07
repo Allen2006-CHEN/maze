@@ -1,90 +1,85 @@
 import matplotlib.pyplot as plt
 import streamlit as st
 import streamlit.components.v1 as components
-import random  # 用於隨機生成陷阱位置
+import random
 
 from maze_generator import generate_maze
 from maze_drawer import plot_maze, plot_path
 from maze_solver import a_star
 
 def main():
-    st.title("我的 2D 隨機迷宮 ") 
+    st.title("我的 2D 隨機迷宮 (動態陷阱版)") 
     
     # ==========================================
-    # 1. 側邊欄設定區
+    # 1. 側邊欄：地圖與位置參數輸入
     # ==========================================
     st.sidebar.header("迷宮設定")
     width = st.sidebar.slider("迷宮寬度", 5, 30, 20)
     height = st.sidebar.slider("迷宮高度", 5, 30, 15)
-    
-    # 陷阱密度設定 (0% - 30%)
-    trap_percent = st.sidebar.slider("尖刺陷阱密度 (%)", 0, 30, 10)
-    
+    trap_percent = st.sidebar.slider("泥沼陷阱密度 (%)", 0, 30, 10)
     regen_button = st.sidebar.button("產生新地圖 (迷宮+陷阱)")
-
-    # ==========================================
-    # 2. 記憶體機制 (Session State)
-    # ==========================================
-    if 'maze' not in st.session_state or 'traps' not in st.session_state or regen_button:
-        # 2a. 生成迷宮
-        st.session_state.maze = generate_maze(width, height)
-        
-        # ==================================================================
-        # 2b. 【核心修改】生成隨機陷阱（導入黃金路徑保護機制）
-        # ==================================================================
-        # 計算需要多少陷阱格
-        num_cells = width * height
-        num_traps = int(num_cells * (trap_percent / 100))
-        
-        # 找出所有可能的格子座標
-        all_cells = [(r, c) for r in range(height) for c in range(width)]
-        
-        # 💡 先在完全沒有陷阱的狀態下，算出一條從 (0,0) 到 (H-1, W-1) 的保底黃金路徑
-        golden_path = a_star(st.session_state.maze, 0, 0, height - 1, width - 1, traps=set())
-        
-        # 篩選安全格子：必須不是預設起終點，且【絕對不能】落在剛剛算出來的黃金路徑上
-        # 這樣就能確保這一條活路不會被尖刺截斷
-        safe_cells = [cell for cell in all_cells if cell not in golden_path]
-        
-        # 從剩餘的安全區域中隨機抽取陷阱位置
-        if len(safe_cells) >= num_traps:
-            selected_traps = random.sample(safe_cells, num_traps)
-        else:
-            selected_traps = safe_cells # 萬一安全格子不夠，就放滿安全區
-            
-        # 將陷阱儲存為集合(Set)
-        st.session_state.traps = set(selected_traps)
-
-    # 從記憶體中拿出鎖定的迷宮和陷阱
-    random_maze = st.session_state.maze
-    spike_traps = st.session_state.traps
-
-    # ==========================================
-    # 3. 位置設定 (起點/終點)
-    # ==========================================
+    
+    # ⚠️ 把位置設定往前移，這樣我們才能先知道起終點在哪，再決定陷阱怎麼撒
     st.sidebar.header("位置設定")
     start_y = st.sidebar.number_input("起點 Y (上下)", 0, height - 1, 0)
     start_x = st.sidebar.number_input("起點 X (左右)", 0, width - 1, 0)
-    
     end_y = st.sidebar.number_input("終點 Y (上下)", 0, height - 1, height - 1)
     end_x = st.sidebar.number_input("終點 X (左右)", 0, width - 1, width - 1)
 
     start_pos = (start_y, start_x)
     end_pos = (end_y, end_x)
 
-    # 關鍵防守邏輯：如果使用者手動將起終點移到原有的陷阱上，動態將其移除，確保起終點可通行
-    valid_traps = spike_traps.copy()
-    if start_pos in valid_traps: valid_traps.remove(start_pos)
-    if end_pos in valid_traps: valid_traps.remove(end_pos)
-
-    # ==========================================
-    # 4. 動畫速度設定
-    # ==========================================
     st.sidebar.header("動畫設定")
     anim_speed = st.sidebar.slider("每步延遲 (毫秒)", 10, 500, 100, step=10)
-    
+
     # ==========================================
-    # 5. 計算路徑與繪圖
+    # 2. 狀態偵測 (判斷使用者動了什麼拉桿)
+    # ==========================================
+    # 初次載入時，先建立記憶體變數
+    if 'prev_start' not in st.session_state: st.session_state.prev_start = start_pos
+    if 'prev_end' not in st.session_state: st.session_state.prev_end = end_pos
+    if 'prev_trap_pct' not in st.session_state: st.session_state.prev_trap_pct = trap_percent
+
+    # 判斷起終點或陷阱密度是否有被改變
+    positions_changed = (start_pos != st.session_state.prev_start) or (end_pos != st.session_state.prev_end)
+    pct_changed = (trap_percent != st.session_state.prev_trap_pct)
+
+    # ==========================================
+    # 3. 生成邏輯 (迷宮與陷阱分離)
+    # ==========================================
+    # 情況 A：如果沒有迷宮，或者按下了「產生新地圖」，才重新生成牆壁
+    if 'maze' not in st.session_state or regen_button:
+        st.session_state.maze = generate_maze(width, height)
+        st.session_state.need_new_traps = True # 標記迷宮換了，陷阱必須重撒
+
+    # 情況 B：如果迷宮換了、或者起終點動了、或者陷阱密度調了，就「重撒陷阱」
+    if 'traps' not in st.session_state or positions_changed or pct_changed or st.session_state.get('need_new_traps', False):
+        num_cells = width * height
+        num_traps = int(num_cells * (trap_percent / 100))
+        all_cells = [(r, c) for r in range(height) for c in range(width)]
+        
+        # 直接把新的起點和終點排除，陷阱絕對不會生在上面
+        safe_cells = [cell for cell in all_cells if cell != start_pos and cell != end_pos]
+        
+        if len(safe_cells) >= num_traps:
+            selected_traps = random.sample(safe_cells, num_traps)
+        else:
+            selected_traps = safe_cells
+            
+        st.session_state.traps = set(selected_traps)
+        
+        # 更新記憶體狀態，表示我們已經處理完這次的改動了
+        st.session_state.need_new_traps = False
+        st.session_state.prev_start = start_pos
+        st.session_state.prev_end = end_pos
+        st.session_state.prev_trap_pct = trap_percent
+
+    # 拿出鎖定好的迷宮與陷阱
+    random_maze = st.session_state.maze
+    valid_traps = st.session_state.traps
+
+    # ==========================================
+    # 4. 計算路徑與繪圖
     # ==========================================
     solution_path = a_star(random_maze, start_pos[0], start_pos[1], end_pos[0], end_pos[1], traps=valid_traps)
     fig, ax = plot_maze(random_maze, start=start_pos, end=end_pos, traps=valid_traps)
@@ -96,9 +91,9 @@ def main():
         with st.spinner("正在生成尋路動畫..."):
             components.html(ani.to_jshtml(), height=850, scrolling=True)
     else:
-        plt.title(f"No Path Found... Spiked Blocked ({width}x{height})")
+        plt.title(f"No Path Found... ({width}x{height})")
         st.pyplot(fig)
-        st.error("糟糕！路徑被牆壁或尖刺陷阱完全封死了。請嘗試移動起終點，或按按鈕產生新地圖！")
+        st.error("糟糕！路徑完全被牆壁封死了（泥沼陷阱可以踩，所以一定是牆壁的問題）。請產生新地圖！")
 
 if __name__ == "__main__":
     main()

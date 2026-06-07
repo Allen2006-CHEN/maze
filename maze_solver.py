@@ -51,7 +51,7 @@ def a_star(graph, start_y, start_x, target_y, target_x, traps=None):
             step_cost = 1  # 預設走平地，體力花費為 1
             
             if (nxt_y, nxt_x) in traps:
-                step_cost = 15  # 踩進泥沼，體力花費暴增為 15！
+                step_cost = 1000  # 踩進泥沼，體力花費暴增為 15！
             
             new_cost = past_cost + step_cost # 計算走到下一格的總花費
 

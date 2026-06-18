@@ -8,7 +8,7 @@ from maze_drawer import plot_maze, plot_path
 from maze_solver import a_star
 
 def main():
-    st.title("我的 2D 隨機迷宮 (動態洗牌 + 絕對防堵版)") 
+    st.title(" 2D 隨機迷宮 ") 
     
     # ==========================================
     # 1. 側邊欄：地圖與位置參數輸入
